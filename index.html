@@ -1,0 +1,863 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>プロフ帳管理アプリ</title>
+  <style>
+    :root {
+      --paper: #fffaf2;
+      --ink: #151515;
+      --muted: #635f59;
+      --line: #ddd2c4;
+      --pink: #ef476f;
+      --yellow: #f6ae2d;
+      --green: #0f8b8d;
+      --blue: #2f80ed;
+      --lime: #7cb518;
+      --soft: #fff1c9;
+      --shadow: 0 18px 45px rgba(20, 20, 20, 0.14);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.7;
+      background:
+        linear-gradient(135deg, rgba(239, 71, 111, 0.12), transparent 28%),
+        linear-gradient(225deg, rgba(47, 128, 237, 0.13), transparent 32%),
+        linear-gradient(45deg, rgba(246, 174, 45, 0.15), transparent 36%),
+        var(--paper);
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    img {
+      display: block;
+      width: 100%;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      padding: 14px clamp(16px, 5vw, 56px);
+      background: rgba(255, 250, 242, 0.9);
+      border-bottom: 1px solid var(--line);
+      backdrop-filter: blur(16px);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-mark {
+      display: grid;
+      place-items: center;
+      width: 44px;
+      height: 44px;
+      color: white;
+      font-weight: 900;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--pink), var(--blue));
+    }
+
+    .brand strong,
+    .brand small {
+      display: block;
+    }
+
+    .brand small,
+    .field span,
+    .viewer-note,
+    .section-title p {
+      color: var(--muted);
+    }
+
+    .nav {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .nav a,
+    .pill,
+    .ghost,
+    .primary {
+      border: 1px solid var(--ink);
+      border-radius: 8px;
+    }
+
+    .nav a {
+      padding: 8px 13px;
+      background: white;
+      font-weight: 700;
+    }
+
+    .nav a:nth-child(1) { border-color: var(--green); }
+    .nav a:nth-child(2) { border-color: var(--pink); }
+    .nav a:nth-child(3) { border-color: var(--blue); }
+
+    main {
+      overflow: hidden;
+    }
+
+    .intro,
+    .controls,
+    .stats,
+    .grid,
+    .admin,
+    .report {
+      width: min(1160px, calc(100% - 32px));
+      margin-inline: auto;
+    }
+
+    .intro {
+      display: grid;
+      grid-template-columns: minmax(0, 0.9fr) minmax(320px, 1.1fr);
+      align-items: center;
+      gap: clamp(28px, 6vw, 72px);
+      min-height: calc(100vh - 96px);
+      padding: 54px 0 32px;
+    }
+
+    h1 {
+      max-width: 760px;
+      margin: 0;
+      color: transparent;
+      font-size: clamp(3rem, 11vw, 7rem);
+      line-height: 0.96;
+      letter-spacing: 0;
+      background: linear-gradient(90deg, var(--pink), var(--yellow), var(--green), var(--blue));
+      background-clip: text;
+      -webkit-background-clip: text;
+    }
+
+    .intro p {
+      max-width: 640px;
+      margin: 24px 0 0;
+      font-size: 1.08rem;
+      font-weight: 700;
+    }
+
+    .hero {
+      position: relative;
+      min-height: 420px;
+      overflow: hidden;
+      border: 1px solid var(--ink);
+      border-radius: 8px;
+      background: var(--soft);
+      box-shadow: var(--shadow);
+    }
+
+    .hero img {
+      height: 100%;
+      min-height: 420px;
+      object-fit: cover;
+      filter: saturate(1.08) contrast(1.03);
+    }
+
+    .hero-note {
+      position: absolute;
+      right: 18px;
+      bottom: 18px;
+      width: min(280px, calc(100% - 36px));
+      padding: 14px;
+      background: rgba(255, 250, 242, 0.92);
+      border: 1px solid var(--ink);
+      border-radius: 8px;
+    }
+
+    .controls,
+    .admin,
+    .report {
+      padding: 58px 0 22px;
+    }
+
+    .section-title {
+      margin-bottom: 18px;
+    }
+
+    .section-title h2 {
+      margin: 0;
+      font-size: clamp(1.8rem, 4vw, 3rem);
+      line-height: 1.08;
+    }
+
+    .toolbar,
+    .admin-form {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+    }
+
+    .field span {
+      font-size: 0.84rem;
+      font-weight: 800;
+    }
+
+    .field input,
+    .field select,
+    .field textarea {
+      min-width: 0;
+      width: 100%;
+      padding: 12px 13px;
+      color: var(--ink);
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      outline: none;
+    }
+
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus {
+      border-color: var(--ink);
+      box-shadow: 0 0 0 3px rgba(239, 71, 111, 0.16);
+    }
+
+    .wide {
+      grid-column: span 2;
+    }
+
+    .stats {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      padding: 8px 0 20px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .stats strong {
+      font-size: 2rem;
+    }
+
+    .popular-tags,
+    .tag-list,
+    .suggestions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 32px;
+      padding: 5px 10px;
+      background: white;
+      font-size: 0.9rem;
+    }
+
+    .tag-list .pill:nth-child(5n + 1) { border-color: var(--pink); background: #fff0f4; }
+    .tag-list .pill:nth-child(5n + 2) { border-color: var(--yellow); background: #fff7df; }
+    .tag-list .pill:nth-child(5n + 3) { border-color: var(--green); background: #effefd; }
+    .tag-list .pill:nth-child(5n + 4) { border-color: var(--blue); background: #eef5ff; }
+    .tag-list .pill:nth-child(5n + 5) { border-color: var(--lime); background: #f4fbeb; }
+
+    .pill.meta {
+      color: var(--ink);
+      background: var(--soft);
+    }
+
+    .pill.accent {
+      color: var(--green);
+      border-color: var(--green);
+      background: #effefd;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+      padding: 24px 0 42px;
+    }
+
+    .card {
+      display: flex;
+      min-width: 0;
+      flex-direction: column;
+      gap: 14px;
+      padding: 14px;
+      background: rgba(255, 255, 255, 0.94);
+      border: 1px solid var(--ink);
+      border-radius: 8px;
+      box-shadow: 0 10px 25px rgba(16, 16, 16, 0.08);
+    }
+
+    .card:nth-child(5n + 1) { border-color: var(--pink); }
+    .card:nth-child(5n + 2) { border-color: var(--yellow); }
+    .card:nth-child(5n + 3) { border-color: var(--green); }
+    .card:nth-child(5n + 4) { border-color: var(--blue); }
+    .card:nth-child(5n + 5) { border-color: var(--lime); }
+
+    .card-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .card h3 {
+      margin: 0;
+      font-size: clamp(1.7rem, 4vw, 2.45rem);
+      line-height: 1.05;
+      overflow-wrap: anywhere;
+    }
+
+    .photo {
+      aspect-ratio: 4 / 3;
+      object-fit: cover;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      filter: saturate(1.08);
+    }
+
+    .viewer-note {
+      min-height: 30px;
+      margin: 0;
+    }
+
+    .edit-panel {
+      display: grid;
+      gap: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--line);
+    }
+
+    .ghost,
+    .primary {
+      padding: 11px 14px;
+      background: white;
+      color: var(--ink);
+      font-weight: 900;
+    }
+
+    .primary {
+      color: white;
+      background: linear-gradient(90deg, var(--pink), var(--blue));
+      border-color: transparent;
+    }
+
+    .hidden,
+    [hidden] {
+      display: none;
+    }
+
+    .empty,
+    .report-box {
+      padding: 24px;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+
+    .empty {
+      grid-column: 1 / -1;
+      text-align: center;
+      border-style: dashed;
+    }
+
+    @media (max-width: 900px) {
+      .topbar,
+      .stats {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .intro {
+        grid-template-columns: 1fr;
+        min-height: auto;
+      }
+
+      .toolbar,
+      .admin-form,
+      .grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .wide {
+        grid-column: 1 / -1;
+      }
+    }
+
+    @media (max-width: 620px) {
+      .brand small {
+        display: none;
+      }
+
+      .intro,
+      .controls,
+      .stats,
+      .grid,
+      .admin,
+      .report {
+        width: min(100% - 20px, 1160px);
+      }
+
+      .toolbar,
+      .admin-form,
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .hero,
+      .hero img {
+        min-height: 320px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#top">
+      <span class="brand-mark">TP</span>
+      <span>
+        <strong>Tag Portraits</strong>
+        <small>写真に、自分だけの見え方を残す</small>
+      </span>
+    </a>
+    <nav class="nav" aria-label="メニュー">
+      <a href="#gallery">見る</a>
+      <a href="#admin">投稿</a>
+      <a href="#report">レポート</a>
+    </nav>
+  </header>
+
+  <main id="top">
+    <section class="intro">
+      <div>
+        <h1>プロフ帳管理アプリ</h1>
+        <p>
+          名前、学年、SP、誕生日、MBTI、自由タグをまとめて見られる画像投稿アプリです。
+          閲覧者はコメント欄ではなく、自分のメモとタグで投稿の見え方を編集します。
+        </p>
+      </div>
+      <div class="hero">
+        <img src="https://picsum.photos/seed/tag-portraits-a/760/520" alt="サンプル写真">
+        <div class="hero-note">
+          <strong>#企画</strong><br>
+          <span>#チーム制作 #記録係 #春生まれ</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="controls" id="gallery">
+      <div class="section-title">
+        <h2>投稿一覧</h2>
+        <p>名前やタグで検索できます。</p>
+      </div>
+      <div class="toolbar">
+        <label class="field wide">
+          <span>検索</span>
+          <input id="searchInput" type="search" placeholder="名前・タグを入力">
+        </label>
+        <label class="field">
+          <span>一致</span>
+          <select id="matchMode">
+            <option value="partial">部分一致</option>
+            <option value="exact">完全一致</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>カテゴリ</span>
+          <select id="categoryFilter">
+            <option value="all">全体</option>
+            <option value="grade">学年</option>
+            <option value="sp">SP</option>
+          </select>
+        </label>
+        <label class="field" id="gradeWrap">
+          <span>学年</span>
+          <select id="gradeFilter">
+            <option value="all">すべて</option>
+            <option>一年</option>
+            <option>二年</option>
+            <option>三年</option>
+            <option>四年</option>
+          </select>
+        </label>
+        <label class="field" id="spWrap">
+          <span>SP</span>
+          <select id="spFilter"></select>
+        </label>
+        <label class="field">
+          <span>並び替え</span>
+          <select id="sortMode">
+            <option value="kana">あいうえお順</option>
+            <option value="birthday">誕生日順</option>
+            <option value="updated">更新順</option>
+          </select>
+        </label>
+      </div>
+    </section>
+
+    <section class="stats">
+      <div><strong id="resultCount">0</strong> 件を表示中</div>
+      <div class="popular-tags" id="popularTags"></div>
+    </section>
+
+    <section class="grid" id="profileGrid"></section>
+
+    <section class="admin" id="admin">
+      <div class="section-title">
+        <h2>管理人投稿</h2>
+        <p>デモ用パスワードは <strong>admin</strong> です。投稿内容はこのブラウザに保存されます。</p>
+      </div>
+      <form class="admin-form" id="adminForm">
+        <label class="field">
+          <span>管理パスワード</span>
+          <input id="adminPassword" type="password" placeholder="admin">
+        </label>
+        <label class="field">
+          <span>名前</span>
+          <input id="nameInput" required placeholder="例: 佐藤 ひかり">
+        </label>
+        <label class="field">
+          <span>よみ</span>
+          <input id="kanaInput" required placeholder="例: さとうひかり">
+        </label>
+        <label class="field">
+          <span>学年</span>
+          <select id="gradeInput">
+            <option>一年</option>
+            <option>二年</option>
+            <option>三年</option>
+            <option>四年</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>SP</span>
+          <select id="spInput"></select>
+        </label>
+        <label class="field">
+          <span>誕生日</span>
+          <input id="birthdayInput" type="date" required>
+        </label>
+        <label class="field">
+          <span>MBTI</span>
+          <input id="mbtiInput" maxlength="4" placeholder="ENFP">
+        </label>
+        <label class="field wide">
+          <span>画像URL</span>
+          <input id="imageInput" type="url" placeholder="https://...">
+        </label>
+        <label class="field wide">
+          <span>画像ファイル</span>
+          <input id="imageFileInput" type="file" accept="image/*">
+        </label>
+        <label class="field wide">
+          <span>初期タグ</span>
+          <input id="tagsInput" placeholder="写真, 企画, 春生まれ">
+        </label>
+        <button class="primary" type="submit">投稿する</button>
+      </form>
+    </section>
+
+    <section class="report" id="report">
+      <div class="section-title">
+        <h2>提出レポート用メモ</h2>
+      </div>
+      <div class="report-box">
+        <p><strong>作品名:</strong> プロフ帳管理アプリ</p>
+        <p><strong>使用言語:</strong> JavaScript / HTML / CSS</p>
+        <p><strong>概要:</strong> 管理人が画像を投稿し、閲覧者が各投稿に自分用タグや一言メモを追加できるプロフィール型画像アーカイブ。</p>
+        <p><strong>工夫:</strong> 人気タグ・類似タグ提案、名前とタグの完全一致 / 部分一致検索、カテゴリ絞り込み、並び替えを実装。</p>
+        <p><strong>改善点:</strong> 本番ではFirebaseなどを使い、管理人認証と閲覧者ごとの保存をサーバー側で行いたい。</p>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const SP_OPTIONS = ["Deloitte.", "SONY", "CTC", "MIXI", "SEPTENI", "SoftBank", "FUJITSU", "ROHTO", "sansan", "SECOM", "RICOH"];
+    const STORAGE_KEY = "profile-book-posts-v2";
+    const EDIT_KEY = "profile-book-edits-v2";
+
+    const samplePosts = [
+      { id: "1", name: "青木 すず", kana: "あおきすず", grade: "一年", sp: "SONY", birthday: "2006-04-12", mbti: "ENFP", image: "https://picsum.photos/seed/aoki-suzu/900/680", tags: ["企画", "写真", "春生まれ", "音楽", "聞き上手"], updatedAt: "2026-04-10T10:30:00.000Z" },
+      { id: "2", name: "伊藤 まこと", kana: "いとうまこと", grade: "三年", sp: "MIXI", birthday: "2004-11-03", mbti: "INTJ", image: "https://picsum.photos/seed/ito-makoto/900/680", tags: ["分析", "ゲーム", "秋生まれ", "設計", "夜型"], updatedAt: "2026-04-13T12:00:00.000Z" },
+      { id: "3", name: "加藤 ゆい", kana: "かとうゆい", grade: "二年", sp: "Deloitte.", birthday: "2005-07-21", mbti: "ISFJ", image: "https://picsum.photos/seed/kato-yui/900/680", tags: ["夏生まれ", "資料作成", "相談", "旅行", "丁寧"], updatedAt: "2026-04-12T09:00:00.000Z" },
+      { id: "4", name: "佐藤 ひかり", kana: "さとうひかり", grade: "四年", sp: "SoftBank", birthday: "2003-01-18", mbti: "ENTP", image: "https://picsum.photos/seed/sato-hikari/900/680", tags: ["発表", "冬生まれ", "リーダー", "AI", "アイデア"], updatedAt: "2026-04-16T15:45:00.000Z" },
+      { id: "5", name: "田中 れん", kana: "たなかれん", grade: "一年", sp: "RICOH", birthday: "2006-09-09", mbti: "ISTP", image: "https://picsum.photos/seed/tanaka-ren/900/680", tags: ["ものづくり", "カメラ", "秋生まれ", "静か", "実装"], updatedAt: "2026-04-11T08:20:00.000Z" },
+      { id: "6", name: "森 なお", kana: "もりなお", grade: "二年", sp: "sansan", birthday: "2005-05-30", mbti: "INFJ", image: "https://picsum.photos/seed/mori-nao/900/680", tags: ["読書", "春生まれ", "文章", "観察", "デザイン"], updatedAt: "2026-04-17T07:05:00.000Z" }
+    ];
+
+    let posts = load(STORAGE_KEY, samplePosts);
+    let edits = load(EDIT_KEY, {});
+    const filters = { query: "", match: "partial", category: "all", grade: "all", sp: "all", sort: "kana" };
+
+    const grid = document.querySelector("#profileGrid");
+    const resultCount = document.querySelector("#resultCount");
+    const popularTags = document.querySelector("#popularTags");
+    const gradeWrap = document.querySelector("#gradeWrap");
+    const spWrap = document.querySelector("#spWrap");
+
+    init();
+
+    function init() {
+      fillSelect("#spFilter", ["すべて", ...SP_OPTIONS], ["all", ...SP_OPTIONS]);
+      fillSelect("#spInput", SP_OPTIONS, SP_OPTIONS);
+      document.querySelector("#searchInput").addEventListener("input", event => { filters.query = event.target.value.trim(); render(); });
+      document.querySelector("#matchMode").addEventListener("change", event => { filters.match = event.target.value; render(); });
+      document.querySelector("#categoryFilter").addEventListener("change", event => { filters.category = event.target.value; updateCategory(); render(); });
+      document.querySelector("#gradeFilter").addEventListener("change", event => { filters.grade = event.target.value; render(); });
+      document.querySelector("#spFilter").addEventListener("change", event => { filters.sp = event.target.value; render(); });
+      document.querySelector("#sortMode").addEventListener("change", event => { filters.sort = event.target.value; render(); });
+      document.querySelector("#adminForm").addEventListener("submit", addPost);
+      updateCategory();
+      render();
+    }
+
+    function fillSelect(selector, labels, values) {
+      document.querySelector(selector).innerHTML = labels.map((label, index) => `<option value="${values[index]}">${label}</option>`).join("");
+    }
+
+    function updateCategory() {
+      gradeWrap.classList.toggle("hidden", filters.category !== "grade");
+      spWrap.classList.toggle("hidden", filters.category !== "sp");
+    }
+
+    function render() {
+      const visible = posts.filter(matchPost).sort(sortPost);
+      resultCount.textContent = visible.length;
+      renderPopularTags();
+      grid.innerHTML = visible.length ? visible.map(cardHtml).join("") : '<p class="empty">条件に合う投稿がありません。</p>';
+      bindCards();
+    }
+
+    function matchPost(post) {
+      if (filters.category === "grade" && filters.grade !== "all" && post.grade !== filters.grade) return false;
+      if (filters.category === "sp" && filters.sp !== "all" && post.sp !== filters.sp) return false;
+      const query = normalize(filters.query);
+      if (!query) return true;
+      const values = [post.name, post.grade, post.sp, birthday(post.birthday), post.mbti, ...allTags(post)].map(normalize);
+      return filters.match === "exact" ? values.some(value => value === query) : values.some(value => value.includes(query));
+    }
+
+    function sortPost(a, b) {
+      if (filters.sort === "birthday") return birthdayKey(a.birthday) - birthdayKey(b.birthday);
+      if (filters.sort === "updated") return new Date(b.updatedAt) - new Date(a.updatedAt);
+      return a.kana.localeCompare(b.kana, "ja");
+    }
+
+    function cardHtml(post) {
+      const edit = edits[post.id] || { tags: [], note: "" };
+      const tags = [post.grade, post.sp, birthday(post.birthday), post.mbti, ...allTags(post)].filter(Boolean).slice(0, 10);
+      return `
+        <article class="card" data-id="${post.id}">
+          <div class="card-head">
+            <h3>${escapeHtml(post.name)}</h3>
+            <button class="ghost edit-button" type="button">編集</button>
+          </div>
+          <div class="tag-list">${tags.map((tag, index) => `<span class="pill ${index < 4 ? "meta" : ""}">#${escapeHtml(tag)}</span>`).join("")}</div>
+          <img class="photo" src="${post.image}" alt="${escapeHtml(post.name)}の投稿画像">
+          <p class="viewer-note">${escapeHtml(edit.note || "一言メモはまだありません。")}</p>
+          <div class="edit-panel" hidden>
+            <label class="field">
+              <span>自分用タグを追加</span>
+              <input class="tag-input" placeholder="例: 相談したい">
+            </label>
+            <div class="suggestions">${suggestions(post, "").map(tag => `<button class="pill suggest" type="button" data-tag="${escapeHtml(tag)}">#${escapeHtml(tag)}</button>`).join("")}</div>
+            <label class="field">
+              <span>一言メモ</span>
+              <textarea class="note-input" rows="3" placeholder="覚えておきたいこと">${escapeHtml(edit.note || "")}</textarea>
+            </label>
+            <button class="primary save-button" type="button">保存</button>
+          </div>
+        </article>
+      `;
+    }
+
+    function bindCards() {
+      document.querySelectorAll(".card").forEach(card => {
+        const id = card.dataset.id;
+        const post = posts.find(item => item.id === id);
+        const panel = card.querySelector(".edit-panel");
+        const tagInput = card.querySelector(".tag-input");
+        const noteInput = card.querySelector(".note-input");
+        const suggestionBox = card.querySelector(".suggestions");
+
+        card.querySelector(".edit-button").addEventListener("click", () => {
+          panel.hidden = !panel.hidden;
+        });
+
+        tagInput.addEventListener("input", () => {
+          suggestionBox.innerHTML = suggestions(post, tagInput.value).map(tag => `<button class="pill suggest" type="button" data-tag="${escapeHtml(tag)}">#${escapeHtml(tag)}</button>`).join("");
+        });
+
+        suggestionBox.addEventListener("click", event => {
+          const button = event.target.closest(".suggest");
+          if (!button) return;
+          tagInput.value = button.dataset.tag;
+          tagInput.focus();
+        });
+
+        card.querySelector(".save-button").addEventListener("click", () => {
+          const current = edits[id] || { tags: [], note: "" };
+          const nextTag = cleanTag(tagInput.value);
+          edits[id] = {
+            tags: nextTag ? unique([...current.tags, nextTag]).slice(0, 10) : current.tags,
+            note: noteInput.value.trim()
+          };
+          post.updatedAt = new Date().toISOString();
+          save();
+          render();
+        });
+      });
+    }
+
+    async function addPost(event) {
+      event.preventDefault();
+      if (document.querySelector("#adminPassword").value !== "admin") {
+        alert("管理パスワードが違います。デモでは admin です。");
+        return;
+      }
+
+      const file = document.querySelector("#imageFileInput").files[0];
+      const url = document.querySelector("#imageInput").value.trim();
+      const post = {
+        id: `post-${Date.now()}`,
+        name: document.querySelector("#nameInput").value.trim(),
+        kana: document.querySelector("#kanaInput").value.trim(),
+        grade: document.querySelector("#gradeInput").value,
+        sp: document.querySelector("#spInput").value,
+        birthday: document.querySelector("#birthdayInput").value,
+        mbti: document.querySelector("#mbtiInput").value.trim().toUpperCase(),
+        image: file ? await readFile(file) : url || `https://picsum.photos/seed/${Date.now()}/900/680`,
+        tags: parseTags(document.querySelector("#tagsInput").value),
+        updatedAt: new Date().toISOString()
+      };
+
+      if (!post.name || !post.kana || !post.birthday) {
+        alert("名前、よみ、誕生日を入力してください。");
+        return;
+      }
+
+      posts.push(post);
+      save();
+      event.target.reset();
+      render();
+      document.querySelector("#gallery").scrollIntoView({ behavior: "smooth" });
+    }
+
+    function renderPopularTags() {
+      popularTags.innerHTML = popular().slice(0, 8).map(tag => `<button class="pill accent popular" type="button" data-tag="${escapeHtml(tag.name)}">#${escapeHtml(tag.name)}</button>`).join("");
+      popularTags.querySelectorAll(".popular").forEach(button => {
+        button.addEventListener("click", () => {
+          document.querySelector("#searchInput").value = button.dataset.tag;
+          filters.query = button.dataset.tag;
+          render();
+        });
+      });
+    }
+
+    function suggestions(post, query) {
+      const used = new Set(allTags(post).map(normalize));
+      const q = normalize(cleanTag(query));
+      return popular().map(tag => tag.name)
+        .filter(tag => !used.has(normalize(tag)))
+        .filter(tag => !q || normalize(tag).includes(q) || q.includes(normalize(tag)))
+        .slice(0, 6);
+    }
+
+    function popular() {
+      const count = new Map();
+      posts.flatMap(allTags).forEach(tag => count.set(tag, (count.get(tag) || 0) + 1));
+      return [...count.entries()].map(([name, total]) => ({ name, total })).sort((a, b) => b.total - a.total || a.name.localeCompare(b.name, "ja"));
+    }
+
+    function allTags(post) {
+      const edit = edits[post.id] || { tags: [] };
+      return unique([...(post.tags || []), ...(edit.tags || [])]).slice(0, 10);
+    }
+
+    function parseTags(value) {
+      return unique(value.split(/[,\s、]+/).map(cleanTag).filter(Boolean)).slice(0, 10);
+    }
+
+    function cleanTag(value) {
+      return String(value || "").replace(/^#/, "").trim();
+    }
+
+    function birthday(value) {
+      const date = new Date(value);
+      return `${date.getMonth() + 1}/${date.getDate()}`;
+    }
+
+    function birthdayKey(value) {
+      const date = new Date(value);
+      return (date.getMonth() + 1) * 100 + date.getDate();
+    }
+
+    function readFile(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.addEventListener("load", () => resolve(reader.result));
+        reader.addEventListener("error", () => reject(reader.error));
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function load(key, fallback) {
+      try {
+        return JSON.parse(localStorage.getItem(key)) || fallback;
+      } catch {
+        return fallback;
+      }
+    }
+
+    function save() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(posts));
+      localStorage.setItem(EDIT_KEY, JSON.stringify(edits));
+    }
+
+    function normalize(value) {
+      return String(value || "").trim().toLowerCase();
+    }
+
+    function unique(values) {
+      return [...new Set(values.filter(Boolean))];
+    }
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[char]));
+    }
+  </script>
+</body>
+</html>
